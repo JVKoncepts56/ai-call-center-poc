@@ -68,11 +68,11 @@ Guidelines:
  * @param {string} text - Text to convert to speech
  * @returns {Promise<Buffer>} Audio buffer
  */
-async function textToSpeech(text) {
+async function textToSpeech(text, voice = 'nova') {
   try {
     const mp3 = await openai.audio.speech.create({
       model: 'tts-1',
-      voice: 'alloy',
+      voice: voice, // Options: alloy, echo, fable, onyx, nova, shimmer
       input: text,
     });
 

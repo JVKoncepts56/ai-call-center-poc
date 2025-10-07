@@ -4,9 +4,13 @@ const twilio = require('twilio');
 const { generateResponse } = require('../services/openai');
 const { logCall, storeMessage, getConversationHistory } = require('../services/supabase');
 const { validateTwilioSignature, sanitizeInput } = require('../utils/validators');
+const { generateAndCacheAudio } = require('./audio');
 const logger = require('../utils/logger');
 
 const VoiceResponse = twilio.twiml.VoiceResponse;
+
+// OpenAI voice to use (options: alloy, echo, fable, onyx, nova, shimmer)
+const OPENAI_VOICE = process.env.OPENAI_VOICE || 'nova';
 
 /**
  * POST /webhook/voice
@@ -44,11 +48,12 @@ router.post('/', async (req, res) => {
 
     // Initial greeting or process speech input
     if (!speechResult) {
-      // First interaction - greet the caller
-      twiml.say({
-        voice: 'Polly.Ruth',
-        language: 'en-US'
-      }, 'Thank you for calling Workforce Shield. How can I help you today?');
+      // First interaction - greet the caller with OpenAI voice
+      const greetingText = 'Thank you for calling Workforce Shield. How can I help you today?';
+      const audioKey = await generateAndCacheAudio(greetingText, OPENAI_VOICE);
+      const audioUrl = `${req.protocol}://${req.get('host')}/audio/${audioKey}`;
+
+      twiml.play(audioUrl);
 
       // Gather speech input
       const gather = twiml.gather({
@@ -90,11 +95,10 @@ router.post('/', async (req, res) => {
         content: aiResponse
       });
 
-      // Speak the response
-      twiml.say({
-        voice: 'Polly.Ruth',
-        language: 'en-US'
-      }, aiResponse);
+      // Speak the response with OpenAI voice
+      const responseAudioKey = await generateAndCacheAudio(aiResponse, OPENAI_VOICE);
+      const responseAudioUrl = `${req.protocol}://${req.get('host')}/audio/${responseAudioKey}`;
+      twiml.play(responseAudioUrl);
 
       // Continue gathering input
       const gather = twiml.gather({
@@ -107,10 +111,10 @@ router.post('/', async (req, res) => {
       });
 
       // If no input, ask if they need anything else
-      twiml.say({
-        voice: 'Polly.Ruth',
-        language: 'en-US'
-      }, 'Is there anything else I can help you with?');
+      const followUpText = 'Is there anything else I can help you with?';
+      const followUpAudioKey = await generateAndCacheAudio(followUpText, OPENAI_VOICE);
+      const followUpAudioUrl = `${req.protocol}://${req.get('host')}/audio/${followUpAudioKey}`;
+      twiml.play(followUpAudioUrl);
 
       // Redirect to gather more input
       twiml.redirect('/webhook/voice');
@@ -123,6 +127,7 @@ router.post('/', async (req, res) => {
     logger.error('Error in voice webhook', { error: error.message });
 
     const twiml = new VoiceResponse();
+    // Fallback to Twilio voice if OpenAI fails
     twiml.say({
       voice: 'Polly.Ruth',
       language: 'en-US'

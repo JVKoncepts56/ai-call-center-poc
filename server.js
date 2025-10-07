@@ -3,6 +3,7 @@ const express = require('express');
 const voiceRoutes = require('./src/routes/voice');
 const statusRoutes = require('./src/routes/status');
 const adminRoutes = require('./src/routes/admin');
+const { router: audioRoutes } = require('./src/routes/audio');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,7 @@ app.get('/health', (req, res) => {
 app.use('/webhook/voice', voiceRoutes);
 app.use('/webhook/status', statusRoutes);
 app.use('/admin', adminRoutes);
+app.use('/audio', audioRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
