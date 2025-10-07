@@ -9,8 +9,8 @@ const logger = require('../utils/logger');
 
 const VoiceResponse = twilio.twiml.VoiceResponse;
 
-// OpenAI voice to use (options: alloy, echo, fable, onyx, nova, shimmer)
-const OPENAI_VOICE = process.env.OPENAI_VOICE || 'nova';
+// OpenAI voice to use (options: alloy, ash, ballad, coral, echo, fable, onyx, nova, sage, shimmer, verse)
+const OPENAI_VOICE = process.env.OPENAI_VOICE || 'coral';
 
 /**
  * POST /webhook/voice
