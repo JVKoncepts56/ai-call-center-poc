@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
       });
 
       // First interaction - greet the caller with OpenAI voice
-      const greetingText = 'Welcome to Workforce Shield, Virtual Care and Expert Counsel, Anytime, Any Day. Are you needing help with legal or health concern issues?';
+      const greetingText = 'Welcome to Workforce Shield, Virtual Care and Expert Counsel, Anytime, Any Day. Are you needing help with legal or medical issues?';
       const audioKey = await generateAndCacheAudio(greetingText, OPENAI_VOICE);
       const audioUrl = `${req.protocol}://${req.get('host')}/audio/${audioKey}`;
 
