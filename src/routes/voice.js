@@ -71,23 +71,32 @@ router.post('/', async (req, res) => {
       const userInput = sanitizeInput(speechResult);
       logger.info('User speech input', { callSid, userInput });
 
-      // Store user message
-      await storeMessage({
-        callSid,
-        role: 'user',
-        content: userInput
-      });
+      // Play a quick acknowledgment filler while processing
+      const fillerPhrases = [
+        'Let me help you with that.',
+        'Sure, let me check that for you.',
+        'Great question.',
+        'Absolutely, here\'s what I can tell you.',
+        'Let me find that information.'
+      ];
+      const randomFiller = fillerPhrases[Math.floor(Math.random() * fillerPhrases.length)];
 
-      // Get conversation history
-      const history = await getConversationHistory(callSid);
-      const conversationHistory = history.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
+      // Generate filler audio and AI response in parallel for speed
+      const [fillerAudioKey, aiResponse, history] = await Promise.all([
+        generateAndCacheAudio(randomFiller, OPENAI_VOICE),
+        (async () => {
+          const hist = await getConversationHistory(callSid);
+          const convHistory = hist.map(msg => ({ role: msg.role, content: msg.content }));
+          return generateResponse(userInput, convHistory);
+        })(),
+        storeMessage({ callSid, role: 'user', content: userInput })
+      ]);
 
-      // Generate AI response
-      const aiResponse = await generateResponse(userInput, conversationHistory);
       logger.info('AI response generated', { callSid, response: aiResponse });
+
+      // Play filler phrase
+      const fillerAudioUrl = `${req.protocol}://${req.get('host')}/audio/${fillerAudioKey}`;
+      twiml.play(fillerAudioUrl);
 
       // Store AI message
       await storeMessage({
@@ -96,7 +105,7 @@ router.post('/', async (req, res) => {
         content: aiResponse
       });
 
-      // Speak the response with OpenAI voice
+      // Generate and play the actual response
       const responseAudioKey = await generateAndCacheAudio(aiResponse, OPENAI_VOICE);
       const responseAudioUrl = `${req.protocol}://${req.get('host')}/audio/${responseAudioKey}`;
       twiml.play(responseAudioUrl);

@@ -54,10 +54,13 @@ Example good responses:
     ];
 
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o-mini', // Fast and cost-effective
       messages: messages,
       temperature: 0.7,
-      max_tokens: 160  // Increased for 20-second responses (about 120 words = ~20 seconds)
+      max_tokens: 160,  // 20-second responses (about 120 words)
+      top_p: 0.9,       // Slightly more focused responses for speed
+      frequency_penalty: 0.3,  // Reduce repetition
+      presence_penalty: 0.3    // Encourage varied responses
     });
 
     return response.choices[0].message.content;
