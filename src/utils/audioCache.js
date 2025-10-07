@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { textToSpeech } = require('../services/openai');
 const logger = require('./logger');
 
@@ -22,9 +23,14 @@ async function preloadFillerPhrases(voice) {
   try {
     for (const phrase of FILLER_PHRASES) {
       const audioBuffer = await textToSpeech(phrase, voice);
-      const cacheKey = `filler_${Buffer.from(phrase).toString('base64').substring(0, 20)}`;
+      // Use hash for consistent cache keys
+      const cacheKey = crypto
+        .createHash('sha256')
+        .update(phrase + voice)
+        .digest('hex')
+        .substring(0, 32);
       audioCacheStore.set(cacheKey, audioBuffer);
-      logger.info(`Cached filler: "${phrase}"`);
+      logger.info(`Cached filler: "${phrase}" with key: ${cacheKey}`);
     }
     logger.info(`Successfully preloaded ${FILLER_PHRASES.length} filler phrases`);
   } catch (error) {
@@ -35,9 +41,14 @@ async function preloadFillerPhrases(voice) {
 /**
  * Get a random pre-cached filler phrase
  */
-function getRandomFillerAudio() {
+function getRandomFillerAudio(voice) {
   const randomPhrase = FILLER_PHRASES[Math.floor(Math.random() * FILLER_PHRASES.length)];
-  const cacheKey = `filler_${Buffer.from(randomPhrase).toString('base64').substring(0, 20)}`;
+  // Use hash to match what was stored
+  const cacheKey = crypto
+    .createHash('sha256')
+    .update(randomPhrase + voice)
+    .digest('hex')
+    .substring(0, 32);
   return {
     audio: audioCacheStore.get(cacheKey),
     phrase: randomPhrase,

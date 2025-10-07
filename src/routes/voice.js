@@ -126,7 +126,7 @@ router.post('/', async (req, res) => {
         // Don't add follow-up text after bumper - let them respond directly
       } else {
         // Normal flow: Use pre-cached filler for INSTANT acknowledgment
-        const { cacheKey: fillerKey } = getRandomFillerAudio();
+        const { cacheKey: fillerKey } = getRandomFillerAudio(OPENAI_VOICE);
         const fillerAudioUrl = `${req.protocol}://${req.get('host')}/audio/${fillerKey}`;
 
         // Play instant filler acknowledgment

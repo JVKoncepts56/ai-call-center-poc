@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { textToSpeech } = require('../services/openai');
 const { getAudio, cacheAudio } = require('../utils/audioCache');
 const logger = require('../utils/logger');
@@ -72,7 +73,13 @@ async function generateAndCacheAudio(text, voice) {
     });
 
     const audioBuffer = await textToSpeech(text, voice);
-    const cacheKey = Buffer.from(text).toString('base64').substring(0, 32);
+
+    // Use SHA256 hash for reliable, collision-free cache keys
+    const cacheKey = crypto
+      .createHash('sha256')
+      .update(text + voice)
+      .digest('hex')
+      .substring(0, 32);
 
     // Store in both local and shared caches
     audioCache.set(cacheKey, audioBuffer);
