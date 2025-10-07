@@ -1,22 +1,57 @@
 # Knowledge Base
 
-This file contains the knowledge base information for the AI call center.
-Paste your website content, FAQs, product information, or any other relevant data here.
-
-The AI assistant will use this information to answer customer questions.
-
-## Example Structure:
 
 ### Company Information
-- Company Name: [Your Company]
-- Hours: Monday-Friday, 9am-5pm
-- Contact: support@example.com
+- Company Name: Workforce Shield
+- Hours: 24 hours a day, 7 days a week, Monday through Friday.
+- Contact: mygarza@workforceshields.com
 
 ### Products/Services
-[Add your products and services information here]
+Work Force Shields
+Is your 24/7 solution for telemedicine and legal support. Whether you’re facing a health concern or legal issue, our team is here to help you get answers fast, no appointments, no apps, no hassle.Virtual Care and Expert Counsel, Anytime You Need It.
+
+Telemedicine On-Demand Virtual Healthcare, Anytime, Anywhere.
+Skip the waiting room and connect directly with our Certified Medical Physician by phone.
+
+Reliable Legal Support When You Need It Most.
+We connect you with experienced attorneys who can assist in a wide range of legal matters, quickly and affordably.
+
+Membership Benefits
+Our membership plans bundle telemedicine and legal support into one powerful, affordable solution.
+
+Work Force Shields helps individuals and businesses with telemedicine and legal matters. We assist with accessing virtual healthcare services, understanding telemedicine options, and ensuring quality medical support remotely. Our team also provides legal guidance to help clients handle disputes, contracts, and other legal concerns. We make telemedicine and legal processes easier, ensuring our clients get the support they need. Whether you need virtual healthcare assistance or legal advice, we’re here to help every step of the way.
+
+Members will be able to call 24/7, 888-744-3537,  and will be able to conduct a telemedicine office visit with our Certified Medical Team. If a Member requires medication, they will have access to discounted meds from an Apple Pharmacy. Each Work Force Shields member will receive their purchased medical kit, thoughtfully equipped with essential health tools, such as an ear, nose, and throat scope for digital imaging, a heart and blood pressure monitor, and two COVID-19 tests, to help monitor and maintain personal well-being. Also, now available to minors.
+
+When any Member is confronted with a legal issue, such as a car accident, divorce, DWI, or any other legal situation, they can speak to an attorney. If further legal representation is required, Members can receive it at a discounted rate. It’s like having a trusted attorney on retainer.
+
+
 
 ### FAQs
 Q: What are your business hours?
-A: We are open Monday through Friday, 9am to 5pm.
+A: We are open 24 hours a day, 7 days a week with a promise to be your first call and first line of hope as we help you navigate emergent or non emergent medical and/or legal situations. 
+
+Q: What legal services can you offer guidance on?
+A: Get the legal support you need at a discounted rate with professional advice and care at your fingertips such as Personal Injury, Family Law, Civil Law, Criminal Law
+
+Q: What medical services can you connect me to ?
+A: We’re dedicated to providing you with top-quality telemedicine services. You can connect with our Certified Medical Team 24/7 with a simple phone call, such as medical kits ( Ear, Nose and Throat Scope
+Blood Pressure/Heart Monitoring Device
+Digital Thermometer)
+2 COVID Tests and 24/7 Medical Assistance
+Tele-Medical Service
+Discounted Lab Work
+Discounted Medication Access
+No Appointment Needed
+Avoid Germs
+100% Secure
+Certified Medical Team
+Now Available to Minors
+
+Q: how do I contact you
+A: Call us at (888)744-3537 or email us at info@workforceshields.com or come to our office : 3900 N 10th St #710, McAllen, TX 78501
+
+
+
 
 [Add more FAQs as needed]
