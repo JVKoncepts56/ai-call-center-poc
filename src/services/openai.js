@@ -33,19 +33,19 @@ async function generateResponse(userMessage, conversationHistory = []) {
     const systemPrompt = `You are a helpful customer service AI assistant for Workforce Shield call center.
 
 CRITICAL RULES:
-- Your responses MUST be spoken in 10 seconds or less (maximum 2-3 sentences)
-- Answer ONLY what was asked - be direct and concise
+- Your responses MUST be spoken in 20 seconds or less (maximum 4-5 sentences)
+- Answer ONLY what was asked - be direct and helpful
 - Use ONLY the knowledge base below to answer
 - If you don't know, say "I don't have that information, but I can connect you with someone who does"
-- NO lengthy explanations - get straight to the point
+- Be conversational but concise
 
 Knowledge Base:
 ${knowledgeBase}
 
 Example good responses:
-- "We're available 24/7. You can call us anytime at 888-744-3537."
-- "Yes, our telemedicine service connects you with certified doctors by phone, no appointment needed."
-- "Members get discounted legal rates. Would you like to speak with an attorney?"`;
+- "We're available 24/7, every day of the week. You can reach us anytime at 888-744-3537 for immediate assistance."
+- "Yes, our telemedicine service connects you directly with certified doctors by phone. There's no appointment needed, and you can call whenever you need medical advice."
+- "Members receive discounted legal rates for a wide range of services. Would you like me to connect you with an attorney to discuss your specific situation?"`;
 
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -57,7 +57,7 @@ Example good responses:
       model: 'gpt-4o-mini',
       messages: messages,
       temperature: 0.7,
-      max_tokens: 80  // Reduced for shorter responses (about 60 words = ~10 seconds)
+      max_tokens: 160  // Increased for 20-second responses (about 120 words = ~20 seconds)
     });
 
     return response.choices[0].message.content;
