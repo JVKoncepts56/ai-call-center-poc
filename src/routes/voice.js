@@ -93,7 +93,7 @@ router.post('/', async (req, res) => {
         }
       }
 
-      // If we have a bumper message, play it instead of filler + AI response
+      // If we have a bumper message, play it and continue gathering
       if (bumperMessage) {
         // Store user message
         await storeMessage({ callSid, role: 'user', content: userInput });
@@ -111,6 +111,19 @@ router.post('/', async (req, res) => {
         twiml.play(bumperAudioUrl);
 
         logger.info('Played department bumper', { callSid, type: bumperMessage.includes('legal') ? 'legal' : 'medical' });
+
+        // Continue gathering input after bumper
+        const gather = twiml.gather({
+          input: 'speech',
+          action: '/webhook/voice',
+          method: 'POST',
+          timeout: 5,
+          speechTimeout: 'auto',
+          language: 'en-US',
+          hints: 'telemedicine, legal, Workforce Shield, medical, attorney, doctor, yes, no'
+        });
+
+        // Don't add follow-up text after bumper - let them respond directly
       } else {
         // Normal flow: Use pre-cached filler for INSTANT acknowledgment
         const { cacheKey: fillerKey } = getRandomFillerAudio();
@@ -139,24 +152,24 @@ router.post('/', async (req, res) => {
         const responseAudioKey = await generateAndCacheAudio(aiResponse, OPENAI_VOICE);
         const responseAudioUrl = `${req.protocol}://${req.get('host')}/audio/${responseAudioKey}`;
         twiml.play(responseAudioUrl);
+
+        // Continue gathering input with better settings
+        const gather = twiml.gather({
+          input: 'speech',
+          action: '/webhook/voice',
+          method: 'POST',
+          timeout: 5,
+          speechTimeout: 'auto',
+          language: 'en-US',
+          hints: 'telemedicine, legal, Workforce Shield, medical, attorney, doctor, yes, no'
+        });
+
+        // If no input, ask if they need anything else
+        const followUpText = 'Is there anything else I can help you with?';
+        const followUpAudioKey = await generateAndCacheAudio(followUpText, OPENAI_VOICE);
+        const followUpAudioUrl = `${req.protocol}://${req.get('host')}/audio/${followUpAudioKey}`;
+        gather.play(followUpAudioUrl);
       }
-
-      // Continue gathering input with better settings
-      const gather = twiml.gather({
-        input: 'speech',
-        action: '/webhook/voice',
-        method: 'POST',
-        timeout: 5,
-        speechTimeout: 'auto',
-        language: 'en-US',
-        hints: 'telemedicine, legal, Workforce Shield, medical, attorney, doctor, yes, no'
-      });
-
-      // If no input, ask if they need anything else
-      const followUpText = 'Is there anything else I can help you with?';
-      const followUpAudioKey = await generateAndCacheAudio(followUpText, OPENAI_VOICE);
-      const followUpAudioUrl = `${req.protocol}://${req.get('host')}/audio/${followUpAudioKey}`;
-      gather.play(followUpAudioUrl);
     }
 
     const twimlResponse = twiml.toString();
