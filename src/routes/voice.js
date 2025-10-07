@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
       });
 
       // First interaction - greet the caller with OpenAI voice
-      const greetingText = 'Welcome to Workforce Shield, Virtual Care and Expert Counsel, Anytime, Any Day. If this is a health emergency, hang up the phone and dial 911. Otherwise, are you needing help with legal or health concern issues?';
+      const greetingText = 'Welcome to Workforce Shield. If this is an emergency, hang up and dial 911. Are you calling for legal or medical help?';
       const audioKey = await generateAndCacheAudio(greetingText, OPENAI_VOICE);
       const audioUrl = `${req.protocol}://${req.get('host')}/audio/${audioKey}`;
 
@@ -87,9 +87,9 @@ router.post('/', async (req, res) => {
         const hasMedicalKeyword = medicalKeywords.some(keyword => lowerInput.includes(keyword));
 
         if (hasLegalKeyword && !hasMedicalKeyword) {
-          bumperMessage = 'Get the legal support you need at a discounted rate with professional advice and care at your fingertips. How can I help you?';
+          bumperMessage = 'Great! I can connect you with legal support at discounted rates. How can I help you?';
         } else if (hasMedicalKeyword && !hasLegalKeyword) {
-          bumperMessage = 'We\'re dedicated to providing you with top-quality telemedicine services starting with the medical kit we sent you with a blood pressure monitor, thermometer or covid tests. You can connect with our Certified Medical Team 24/7 with a simple phone call. How can I help you?';
+          bumperMessage = 'Perfect! You can connect with our medical team 24/7. How can I help you today?';
         }
       }
 
