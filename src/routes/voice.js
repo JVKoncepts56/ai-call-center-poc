@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
       });
 
       // First interaction - greet the caller with OpenAI voice
-      const greetingText = 'Welcome to Workforce Shield, Virtual Care and Expert Counsel, Anytime You Need It. Whether you\'re facing a health concern or legal issue, our team is here to help you get answers fast. Are you needing help with legal or health concern issues?';
+      const greetingText = 'Welcome to Workforce Shield, Virtual Care and Expert Counsel, Anytime, Any Day. If this is a health emergency, hang up the phone and dial 911. Otherwise, are you needing help with legal or health concern issues?';
       const audioKey = await generateAndCacheAudio(greetingText, OPENAI_VOICE);
       const audioUrl = `${req.protocol}://${req.get('host')}/audio/${audioKey}`;
 
@@ -72,34 +72,74 @@ router.post('/', async (req, res) => {
       const userInput = sanitizeInput(speechResult);
       logger.info('User speech input', { callSid, userInput });
 
-      // Use pre-cached filler for INSTANT acknowledgment
-      const { cacheKey: fillerKey } = getRandomFillerAudio();
-      const fillerAudioUrl = `${req.protocol}://${req.get('host')}/audio/${fillerKey}`;
-
-      // Play instant filler acknowledgment
-      twiml.play(fillerAudioUrl);
-
-      // Store user message
-      await storeMessage({ callSid, role: 'user', content: userInput });
-
-      // Get conversation history and generate AI response
+      // Get conversation history to check if this is first user message
       const history = await getConversationHistory(callSid);
-      const conversationHistory = history.map(msg => ({ role: msg.role, content: msg.content }));
-      const aiResponse = await generateResponse(userInput, conversationHistory);
+      const isFirstMessage = history.length === 0;
 
-      logger.info('AI response generated', { callSid, response: aiResponse });
+      // Check if user is asking for legal or medical help (only on first message)
+      let bumperMessage = null;
+      if (isFirstMessage) {
+        const lowerInput = userInput.toLowerCase();
+        const legalKeywords = ['legal', 'lawyer', 'attorney', 'law', 'court', 'lawsuit', 'divorce', 'dwi', 'accident'];
+        const medicalKeywords = ['medical', 'health', 'doctor', 'sick', 'medicine', 'telemedicine', 'physician', 'symptom'];
 
-      // Store AI message
-      await storeMessage({
-        callSid,
-        role: 'assistant',
-        content: aiResponse
-      });
+        const hasLegalKeyword = legalKeywords.some(keyword => lowerInput.includes(keyword));
+        const hasMedicalKeyword = medicalKeywords.some(keyword => lowerInput.includes(keyword));
 
-      // Generate and play the actual response
-      const responseAudioKey = await generateAndCacheAudio(aiResponse, OPENAI_VOICE);
-      const responseAudioUrl = `${req.protocol}://${req.get('host')}/audio/${responseAudioKey}`;
-      twiml.play(responseAudioUrl);
+        if (hasLegalKeyword && !hasMedicalKeyword) {
+          bumperMessage = 'Get the legal support you need at a discounted rate with professional advice and care at your fingertips. How can I help you?';
+        } else if (hasMedicalKeyword && !hasLegalKeyword) {
+          bumperMessage = 'We\'re dedicated to providing you with top-quality telemedicine services starting with the medical kit we sent you with a blood pressure monitor, thermometer or covid tests. You can connect with our Certified Medical Team 24/7 with a simple phone call. How can I help you?';
+        }
+      }
+
+      // If we have a bumper message, play it instead of filler + AI response
+      if (bumperMessage) {
+        // Store user message
+        await storeMessage({ callSid, role: 'user', content: userInput });
+
+        // Store bumper as assistant message
+        await storeMessage({
+          callSid,
+          role: 'assistant',
+          content: bumperMessage
+        });
+
+        // Play the bumper message
+        const bumperAudioKey = await generateAndCacheAudio(bumperMessage, OPENAI_VOICE);
+        const bumperAudioUrl = `${req.protocol}://${req.get('host')}/audio/${bumperAudioKey}`;
+        twiml.play(bumperAudioUrl);
+
+        logger.info('Played department bumper', { callSid, type: bumperMessage.includes('legal') ? 'legal' : 'medical' });
+      } else {
+        // Normal flow: Use pre-cached filler for INSTANT acknowledgment
+        const { cacheKey: fillerKey } = getRandomFillerAudio();
+        const fillerAudioUrl = `${req.protocol}://${req.get('host')}/audio/${fillerKey}`;
+
+        // Play instant filler acknowledgment
+        twiml.play(fillerAudioUrl);
+
+        // Store user message
+        await storeMessage({ callSid, role: 'user', content: userInput });
+
+        // Get conversation history and generate AI response
+        const conversationHistory = history.map(msg => ({ role: msg.role, content: msg.content }));
+        const aiResponse = await generateResponse(userInput, conversationHistory);
+
+        logger.info('AI response generated', { callSid, response: aiResponse });
+
+        // Store AI message
+        await storeMessage({
+          callSid,
+          role: 'assistant',
+          content: aiResponse
+        });
+
+        // Generate and play the actual response
+        const responseAudioKey = await generateAndCacheAudio(aiResponse, OPENAI_VOICE);
+        const responseAudioUrl = `${req.protocol}://${req.get('host')}/audio/${responseAudioKey}`;
+        twiml.play(responseAudioUrl);
+      }
 
       // Continue gathering input with better settings
       const gather = twiml.gather({
