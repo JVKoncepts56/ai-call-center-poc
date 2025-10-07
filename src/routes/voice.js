@@ -10,7 +10,7 @@ const logger = require('../utils/logger');
 const VoiceResponse = twilio.twiml.VoiceResponse;
 
 // OpenAI voice to use (options: alloy, ash, ballad, coral, echo, fable, onyx, nova, sage, shimmer, verse)
-const OPENAI_VOICE = process.env.OPENAI_VOICE || 'sage';
+const OPENAI_VOICE = process.env.OPENAI_VOICE || 'shimmer';
 
 /**
  * POST /webhook/voice
@@ -48,22 +48,23 @@ router.post('/', async (req, res) => {
 
     // Initial greeting or process speech input
     if (!speechResult) {
+      // Gather speech input - must be BEFORE play/say
+      const gather = twiml.gather({
+        input: 'speech',
+        action: '/webhook/voice',
+        method: 'POST',
+        timeout: 5,
+        speechTimeout: 'auto',
+        language: 'en-US',
+        hints: 'telemedicine, legal, Workforce Shield, medical, attorney, doctor'
+      });
+
       // First interaction - greet the caller with OpenAI voice
       const greetingText = 'Thank you for calling Workforce Shield. How can I help you today?';
       const audioKey = await generateAndCacheAudio(greetingText, OPENAI_VOICE);
       const audioUrl = `${req.protocol}://${req.get('host')}/audio/${audioKey}`;
 
-      twiml.play(audioUrl);
-
-      // Gather speech input
-      const gather = twiml.gather({
-        input: 'speech',
-        action: '/webhook/voice',
-        method: 'POST',
-        timeout: 3,
-        speechTimeout: 'auto',
-        language: 'en-US'
-      });
+      gather.play(audioUrl);
 
     } else {
       // Process the user's speech
@@ -100,24 +101,22 @@ router.post('/', async (req, res) => {
       const responseAudioUrl = `${req.protocol}://${req.get('host')}/audio/${responseAudioKey}`;
       twiml.play(responseAudioUrl);
 
-      // Continue gathering input
+      // Continue gathering input with better settings
       const gather = twiml.gather({
         input: 'speech',
         action: '/webhook/voice',
         method: 'POST',
-        timeout: 3,
+        timeout: 5,
         speechTimeout: 'auto',
-        language: 'en-US'
+        language: 'en-US',
+        hints: 'telemedicine, legal, Workforce Shield, medical, attorney, doctor, yes, no'
       });
 
       // If no input, ask if they need anything else
       const followUpText = 'Is there anything else I can help you with?';
       const followUpAudioKey = await generateAndCacheAudio(followUpText, OPENAI_VOICE);
       const followUpAudioUrl = `${req.protocol}://${req.get('host')}/audio/${followUpAudioKey}`;
-      twiml.play(followUpAudioUrl);
-
-      // Redirect to gather more input
-      twiml.redirect('/webhook/voice');
+      gather.play(followUpAudioUrl);
     }
 
     res.type('text/xml');
