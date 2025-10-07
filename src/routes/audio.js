@@ -15,12 +15,26 @@ router.get('/:cacheKey', async (req, res) => {
   try {
     const { cacheKey } = req.params;
 
+    logger.info('Audio request', {
+      cacheKey,
+      cacheKeyLength: cacheKey.length,
+      inLocalCache: audioCache.has(cacheKey),
+      inSharedCache: !!getAudio(cacheKey)
+    });
+
     // Check both caches (local and shared)
     let audioData = audioCache.get(cacheKey) || getAudio(cacheKey);
 
     if (!audioData) {
-      logger.warn('Audio file not found', { cacheKey });
-      return res.status(404).send('Audio not found');
+      logger.warn('Audio file not found in any cache', {
+        cacheKey,
+        localCacheSize: audioCache.size,
+        availableKeys: Array.from(audioCache.keys()).slice(0, 5)
+      });
+      return res.status(404).json({
+        error: 'Audio not found',
+        cacheKey
+      });
     }
 
     res.set({
@@ -30,6 +44,7 @@ router.get('/:cacheKey', async (req, res) => {
     });
 
     res.send(audioData);
+    logger.info('Audio served successfully', { cacheKey, size: audioData.length });
 
     // Clean up local cache after serving (optional - cache for 1 hour)
     setTimeout(() => {
@@ -37,8 +52,11 @@ router.get('/:cacheKey', async (req, res) => {
     }, 3600000);
 
   } catch (error) {
-    logger.error('Error serving audio', { error: error.message });
-    res.status(500).send('Error serving audio');
+    logger.error('Error serving audio', { error: error.message, stack: error.stack });
+    res.status(500).json({
+      error: 'Error serving audio',
+      message: error.message
+    });
   }
 });
 
@@ -47,12 +65,28 @@ router.get('/:cacheKey', async (req, res) => {
  */
 async function generateAndCacheAudio(text, voice = 'nova') {
   try {
+    logger.info('Generating audio', {
+      textPreview: text.substring(0, 50),
+      textLength: text.length,
+      voice
+    });
+
     const audioBuffer = await textToSpeech(text, voice);
     const cacheKey = Buffer.from(text).toString('base64').substring(0, 32);
+
+    // Store in both local and shared caches
     audioCache.set(cacheKey, audioBuffer);
+    cacheAudio(cacheKey, audioBuffer);
+
+    logger.info('Audio cached successfully', {
+      cacheKey,
+      audioSize: audioBuffer.length,
+      localCacheSize: audioCache.size
+    });
+
     return cacheKey;
   } catch (error) {
-    logger.error('Error generating audio', { error: error.message });
+    logger.error('Error generating audio', { error: error.message, stack: error.stack });
     throw error;
   }
 }
