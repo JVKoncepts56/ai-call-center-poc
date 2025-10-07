@@ -75,14 +75,14 @@ Example good responses:
  * @param {string} text - Text to convert to speech
  * @returns {Promise<Buffer>} Audio buffer
  */
-async function textToSpeech(text, voice = 'nova') {
+async function textToSpeech(text, voice) {
   try {
     // Get speed from environment variable, default to 1.0 (normal)
     const speed = parseFloat(process.env.OPENAI_VOICE_SPEED) || 1.0;
 
     const mp3 = await openai.audio.speech.create({
       model: 'tts-1-hd', // HD quality for better, more natural sound
-      voice: voice, // Options: alloy, ash, ballad, coral, echo, fable, onyx, nova, sage, shimmer, verse
+      voice: voice,
       input: text,
       speed: speed // Range: 0.25 to 4.0 (1.0 = normal, 1.1 = 10% faster, 0.9 = 10% slower)
     });

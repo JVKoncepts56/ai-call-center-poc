@@ -16,7 +16,7 @@ const FILLER_PHRASES = [
 /**
  * Pre-generate and cache filler phrase audio on startup
  */
-async function preloadFillerPhrases(voice = 'shimmer') {
+async function preloadFillerPhrases(voice) {
   logger.info('Preloading filler phrase audio...');
 
   try {

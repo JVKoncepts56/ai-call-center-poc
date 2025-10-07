@@ -10,8 +10,8 @@ const logger = require('../utils/logger');
 
 const VoiceResponse = twilio.twiml.VoiceResponse;
 
-// OpenAI voice to use (options: alloy, ash, ballad, coral, echo, fable, onyx, nova, sage, shimmer, verse)
-const OPENAI_VOICE = process.env.OPENAI_VOICE || 'shimmer';
+// OpenAI voice from environment variable (required)
+const OPENAI_VOICE = process.env.OPENAI_VOICE;
 
 /**
  * POST /webhook/voice
@@ -126,7 +126,7 @@ router.post('/', async (req, res) => {
     logger.error('Error in voice webhook', { error: error.message });
 
     const twiml = new VoiceResponse();
-    // Use same Shimmer voice for error (consistency)
+    // Use configured voice for error (consistency)
     try {
       const errorText = 'I apologize, but I encountered an error. Please try again later.';
       const errorAudioKey = await generateAndCacheAudio(errorText, OPENAI_VOICE);

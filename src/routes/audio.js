@@ -63,7 +63,7 @@ router.get('/:cacheKey', async (req, res) => {
 /**
  * Store audio in cache and return cache key
  */
-async function generateAndCacheAudio(text, voice = 'nova') {
+async function generateAndCacheAudio(text, voice) {
   try {
     logger.info('Generating audio', {
       textPreview: text.substring(0, 50),

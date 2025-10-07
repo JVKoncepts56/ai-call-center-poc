@@ -51,7 +51,7 @@ app.listen(PORT, '0.0.0.0', async () => {
 
   // Preload filler phrase audio for instant responses
   const { preloadFillerPhrases } = require('./src/utils/audioCache');
-  const voice = process.env.OPENAI_VOICE || 'shimmer';
+  const voice = process.env.OPENAI_VOICE;
   await preloadFillerPhrases(voice);
 });
 
