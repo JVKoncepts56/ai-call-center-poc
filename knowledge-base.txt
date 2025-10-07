@@ -1,0 +1,22 @@
+# Knowledge Base
+
+This file contains the knowledge base information for the AI call center.
+Paste your website content, FAQs, product information, or any other relevant data here.
+
+The AI assistant will use this information to answer customer questions.
+
+## Example Structure:
+
+### Company Information
+- Company Name: [Your Company]
+- Hours: Monday-Friday, 9am-5pm
+- Contact: support@example.com
+
+### Products/Services
+[Add your products and services information here]
+
+### FAQs
+Q: What are your business hours?
+A: We are open Monday through Friday, 9am to 5pm.
+
+[Add more FAQs as needed]
