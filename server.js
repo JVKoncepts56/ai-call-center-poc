@@ -45,9 +45,14 @@ app.use((req, res) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`AI Call Center POC running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
+
+  // Preload filler phrase audio for instant responses
+  const { preloadFillerPhrases } = require('./src/utils/audioCache');
+  const voice = process.env.OPENAI_VOICE || 'shimmer';
+  await preloadFillerPhrases(voice);
 });
 
 module.exports = app;

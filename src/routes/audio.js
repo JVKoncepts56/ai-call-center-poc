@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { textToSpeech } = require('../services/openai');
+const { getAudio, cacheAudio } = require('../utils/audioCache');
 const logger = require('../utils/logger');
 
 // In-memory cache for audio files (temporary)
@@ -14,7 +15,8 @@ router.get('/:cacheKey', async (req, res) => {
   try {
     const { cacheKey } = req.params;
 
-    const audioData = audioCache.get(cacheKey);
+    // Check both caches (local and shared)
+    let audioData = audioCache.get(cacheKey) || getAudio(cacheKey);
 
     if (!audioData) {
       logger.warn('Audio file not found', { cacheKey });
@@ -29,7 +31,7 @@ router.get('/:cacheKey', async (req, res) => {
 
     res.send(audioData);
 
-    // Clean up after serving (optional - cache for 1 hour)
+    // Clean up local cache after serving (optional - cache for 1 hour)
     setTimeout(() => {
       audioCache.delete(cacheKey);
     }, 3600000);

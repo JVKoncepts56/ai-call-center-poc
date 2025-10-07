@@ -5,6 +5,7 @@ const { generateResponse } = require('../services/openai');
 const { logCall, storeMessage, getConversationHistory } = require('../services/supabase');
 const { validateTwilioSignature, sanitizeInput } = require('../utils/validators');
 const { generateAndCacheAudio } = require('./audio');
+const { getRandomFillerAudio } = require('../utils/audioCache');
 const logger = require('../utils/logger');
 
 const VoiceResponse = twilio.twiml.VoiceResponse;
@@ -71,32 +72,22 @@ router.post('/', async (req, res) => {
       const userInput = sanitizeInput(speechResult);
       logger.info('User speech input', { callSid, userInput });
 
-      // Play a quick acknowledgment filler while processing
-      const fillerPhrases = [
-        'Let me help you with that.',
-        'Sure, let me check that for you.',
-        'Great question.',
-        'Absolutely, here\'s what I can tell you.',
-        'Let me find that information.'
-      ];
-      const randomFiller = fillerPhrases[Math.floor(Math.random() * fillerPhrases.length)];
+      // Use pre-cached filler for INSTANT acknowledgment
+      const { cacheKey: fillerKey } = getRandomFillerAudio();
+      const fillerAudioUrl = `${req.protocol}://${req.get('host')}/audio/${fillerKey}`;
 
-      // Generate filler audio and AI response in parallel for speed
-      const [fillerAudioKey, aiResponse, history] = await Promise.all([
-        generateAndCacheAudio(randomFiller, OPENAI_VOICE),
-        (async () => {
-          const hist = await getConversationHistory(callSid);
-          const convHistory = hist.map(msg => ({ role: msg.role, content: msg.content }));
-          return generateResponse(userInput, convHistory);
-        })(),
-        storeMessage({ callSid, role: 'user', content: userInput })
-      ]);
+      // Play instant filler acknowledgment
+      twiml.play(fillerAudioUrl);
+
+      // Store user message
+      await storeMessage({ callSid, role: 'user', content: userInput });
+
+      // Get conversation history and generate AI response
+      const history = await getConversationHistory(callSid);
+      const conversationHistory = history.map(msg => ({ role: msg.role, content: msg.content }));
+      const aiResponse = await generateResponse(userInput, conversationHistory);
 
       logger.info('AI response generated', { callSid, response: aiResponse });
-
-      // Play filler phrase
-      const fillerAudioUrl = `${req.protocol}://${req.get('host')}/audio/${fillerAudioKey}`;
-      twiml.play(fillerAudioUrl);
 
       // Store AI message
       await storeMessage({
@@ -135,11 +126,19 @@ router.post('/', async (req, res) => {
     logger.error('Error in voice webhook', { error: error.message });
 
     const twiml = new VoiceResponse();
-    // Fallback to Twilio voice if OpenAI fails
-    twiml.say({
-      voice: 'Polly.Ruth',
-      language: 'en-US'
-    }, 'I apologize, but I encountered an error. Please try again later.');
+    // Use same Shimmer voice for error (consistency)
+    try {
+      const errorText = 'I apologize, but I encountered an error. Please try again later.';
+      const errorAudioKey = await generateAndCacheAudio(errorText, OPENAI_VOICE);
+      const errorAudioUrl = `${req.protocol}://${req.get('host')}/audio/${errorAudioKey}`;
+      twiml.play(errorAudioUrl);
+    } catch (innerError) {
+      // Last resort fallback to Twilio voice
+      twiml.say({
+        voice: 'Polly.Joanna',
+        language: 'en-US'
+      }, 'I apologize, but I encountered an error. Please try again later.');
+    }
     twiml.hangup();
 
     res.type('text/xml');
