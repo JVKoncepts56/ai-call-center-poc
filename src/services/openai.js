@@ -30,18 +30,22 @@ async function generateResponse(userMessage, conversationHistory = []) {
   try {
     const knowledgeBase = await loadKnowledgeBase();
 
-    const systemPrompt = `You are a helpful customer service AI assistant for a call center.
-Use the following knowledge base to answer customer questions accurately and professionally.
-If you don't know the answer based on the knowledge base, politely let the customer know and offer to transfer them to a human agent.
+    const systemPrompt = `You are a helpful customer service AI assistant for Workforce Shield call center.
+
+CRITICAL RULES:
+- Your responses MUST be spoken in 10 seconds or less (maximum 2-3 sentences)
+- Answer ONLY what was asked - be direct and concise
+- Use ONLY the knowledge base below to answer
+- If you don't know, say "I don't have that information, but I can connect you with someone who does"
+- NO lengthy explanations - get straight to the point
 
 Knowledge Base:
 ${knowledgeBase}
 
-Guidelines:
-- Be concise and friendly
-- Provide accurate information based on the knowledge base
-- If uncertain, offer to transfer to a human agent
-- Keep responses brief for phone conversations`;
+Example good responses:
+- "We're available 24/7. You can call us anytime at 888-744-3537."
+- "Yes, our telemedicine service connects you with certified doctors by phone, no appointment needed."
+- "Members get discounted legal rates. Would you like to speak with an attorney?"`;
 
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -53,7 +57,7 @@ Guidelines:
       model: 'gpt-4o-mini',
       messages: messages,
       temperature: 0.7,
-      max_tokens: 150
+      max_tokens: 80  // Reduced for shorter responses (about 60 words = ~10 seconds)
     });
 
     return response.choices[0].message.content;
