@@ -6,17 +6,36 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+// In-memory cache for knowledge base
+let knowledgeBaseCache = null;
+let knowledgeBaseCacheTime = null;
+
 /**
- * Load knowledge base from file
+ * Load knowledge base from file with caching
  */
 async function loadKnowledgeBase() {
+  // Return cached version if available (cache for 1 hour)
+  const cacheMaxAge = 3600000; // 1 hour in milliseconds
+  const now = Date.now();
+
+  if (knowledgeBaseCache && knowledgeBaseCacheTime && (now - knowledgeBaseCacheTime) < cacheMaxAge) {
+    return knowledgeBaseCache;
+  }
+
+  // Load from disk and cache
   try {
     const knowledgeBasePath = path.join(process.cwd(), 'knowledge-base.txt');
     const content = await fs.readFile(knowledgeBasePath, 'utf-8');
+
+    knowledgeBaseCache = content;
+    knowledgeBaseCacheTime = now;
+
+    console.log('✅ Knowledge base loaded and cached');
     return content;
   } catch (error) {
     console.error('Error loading knowledge base:', error);
-    return '';
+    // Return cached version even if expired, better than nothing
+    return knowledgeBaseCache || '';
   }
 }
 
@@ -117,9 +136,19 @@ async function transcribeAudio(audioBuffer, filename = 'audio.mp3') {
   }
 }
 
+/**
+ * Clear knowledge base cache (useful for forcing reload)
+ */
+function clearKnowledgeBaseCache() {
+  knowledgeBaseCache = null;
+  knowledgeBaseCacheTime = null;
+  console.log('Knowledge base cache cleared');
+}
+
 module.exports = {
   generateResponse,
   textToSpeech,
   transcribeAudio,
-  loadKnowledgeBase
+  loadKnowledgeBase,
+  clearKnowledgeBaseCache
 };

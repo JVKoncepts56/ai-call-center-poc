@@ -70,6 +70,10 @@ app.listen(PORT, '0.0.0.0', async () => {
   console.log(`AI Call Center POC running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
 
+  // Preload knowledge base
+  const { loadKnowledgeBase } = require('./src/services/openai');
+  await loadKnowledgeBase();
+
   // Preload filler phrase audio for instant responses
   const { preloadFillerPhrases } = require('./src/utils/audioCache');
   const voice = process.env.OPENAI_VOICE;

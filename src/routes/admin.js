@@ -3,6 +3,7 @@ const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
 const { getCallLogs } = require('../services/supabase');
+const { clearKnowledgeBaseCache } = require('../services/openai');
 const logger = require('../utils/logger');
 
 /**
@@ -25,13 +26,16 @@ router.post('/knowledge-base', async (req, res) => {
     // Write the new content to the knowledge base file
     await fs.writeFile(knowledgeBasePath, content, 'utf-8');
 
-    logger.info('Knowledge base updated', {
+    // Clear cache so next request loads the new content
+    clearKnowledgeBaseCache();
+
+    logger.info('Knowledge base updated and cache cleared', {
       contentLength: content.length
     });
 
     res.status(200).json({
       success: true,
-      message: 'Knowledge base updated successfully',
+      message: 'Knowledge base updated successfully (cache cleared)',
       contentLength: content.length
     });
 
