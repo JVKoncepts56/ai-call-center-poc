@@ -123,21 +123,27 @@ router.post('/', async (req, res) => {
     res.send(twiml.toString());
 
   } catch (error) {
-    logger.error('Error in voice webhook', { error: error.message });
+    logger.error('Error in voice webhook', {
+      error: error.message,
+      stack: error.stack,
+      openaiVoice: OPENAI_VOICE
+    });
 
     const twiml = new VoiceResponse();
-    // Use configured voice for error (consistency)
+
+    // Always use OpenAI voice for error messages
     try {
       const errorText = 'I apologize, but I encountered an error. Please try again later.';
       const errorAudioKey = await generateAndCacheAudio(errorText, OPENAI_VOICE);
       const errorAudioUrl = `${req.protocol}://${req.get('host')}/audio/${errorAudioKey}`;
       twiml.play(errorAudioUrl);
     } catch (innerError) {
-      // Last resort fallback to Twilio voice
-      twiml.say({
-        voice: 'Polly.Joanna',
-        language: 'en-US'
-      }, 'I apologize, but I encountered an error. Please try again later.');
+      logger.error('Failed to generate error audio with OpenAI', {
+        error: innerError.message,
+        voice: OPENAI_VOICE
+      });
+      // If OpenAI fails, just hang up
+      twiml.say('System error. Goodbye.');
     }
     twiml.hangup();
 
