@@ -5,6 +5,27 @@ const statusRoutes = require('./src/routes/status');
 const adminRoutes = require('./src/routes/admin');
 const { router: audioRoutes } = require('./src/routes/audio');
 
+// Validate required environment variables
+const requiredEnvVars = [
+  'OPENAI_API_KEY',
+  'OPENAI_VOICE',
+  'TWILIO_ACCOUNT_SID',
+  'TWILIO_AUTH_TOKEN'
+];
+
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  console.error('❌ FATAL ERROR: Missing required environment variables:');
+  missingEnvVars.forEach(varName => console.error(`   - ${varName}`));
+  console.error('\nPlease set these variables in your environment or .env file');
+  console.error('Example OPENAI_VOICE values: alloy, echo, fable, onyx, nova, shimmer');
+  process.exit(1);
+}
+
+console.log('✅ Environment variables validated');
+console.log(`   Using OpenAI voice: ${process.env.OPENAI_VOICE}`);
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
