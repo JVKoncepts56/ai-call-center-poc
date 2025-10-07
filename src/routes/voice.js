@@ -46,9 +46,9 @@ router.post('/', async (req, res) => {
     if (!speechResult) {
       // First interaction - greet the caller
       twiml.say({
-        voice: 'alice',
+        voice: 'Polly.Joanna',
         language: 'en-US'
-      }, 'Thank you for calling. How can I help you today?');
+      }, 'Thank you for calling Workforce Shield. How can I help you today?');
 
       // Gather speech input
       const gather = twiml.gather({
@@ -92,7 +92,7 @@ router.post('/', async (req, res) => {
 
       // Speak the response
       twiml.say({
-        voice: 'alice',
+        voice: 'Polly.Joanna',
         language: 'en-US'
       }, aiResponse);
 
@@ -108,7 +108,7 @@ router.post('/', async (req, res) => {
 
       // If no input, ask if they need anything else
       twiml.say({
-        voice: 'alice',
+        voice: 'Polly.Joanna',
         language: 'en-US'
       }, 'Is there anything else I can help you with?');
 
@@ -124,7 +124,7 @@ router.post('/', async (req, res) => {
 
     const twiml = new VoiceResponse();
     twiml.say({
-      voice: 'alice',
+      voice: 'Polly.Joanna',
       language: 'en-US'
     }, 'I apologize, but I encountered an error. Please try again later.');
     twiml.hangup();
