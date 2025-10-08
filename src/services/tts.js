@@ -9,9 +9,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Initialize ElevenLabs with API key
+// Initialize ElevenLabs with API key and default voice
 const voice = new ElevenLabs({
-  apiKey: process.env.ELEVENLABS_API_KEY
+  apiKey: process.env.ELEVENLABS_API_KEY,
+  voiceId: process.env.ELEVENLABS_VOICE_ID
 });
 
 /**
