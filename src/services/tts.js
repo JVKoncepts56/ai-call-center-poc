@@ -62,6 +62,8 @@ async function generateOpenAISpeech(text, voice) {
 async function generateElevenLabsSpeech(text, voiceIdParam) {
   const stability = parseFloat(process.env.ELEVENLABS_STABILITY) || 0.5;
   const similarityBoost = parseFloat(process.env.ELEVENLABS_SIMILARITY_BOOST) || 0.75;
+  const style = parseFloat(process.env.ELEVENLABS_STYLE) || 0;
+  const speakerBoost = process.env.ELEVENLABS_SPEAKER_BOOST === 'true';
   const modelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_monolingual_v1';
 
   // Use ELEVENLABS_VOICE_ID from env
@@ -76,6 +78,8 @@ async function generateElevenLabsSpeech(text, voiceIdParam) {
     textPreview: text.substring(0, 50),
     stability,
     similarityBoost,
+    style,
+    speakerBoost,
     modelId
   });
 
@@ -88,7 +92,9 @@ async function generateElevenLabsSpeech(text, voiceIdParam) {
         model_id: modelId,
         voice_settings: {
           stability: stability,
-          similarity_boost: similarityBoost
+          similarity_boost: similarityBoost,
+          style: style,
+          use_speaker_boost: speakerBoost
         }
       },
       {
