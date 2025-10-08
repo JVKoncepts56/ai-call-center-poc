@@ -70,6 +70,9 @@ async function generateElevenLabsSpeech(text, voiceIdParam) {
 
   console.log('ElevenLabs TTS Request (Direct API):', {
     voiceId,
+    apiKeyPresent: !!apiKey,
+    apiKeyLength: apiKey?.length,
+    apiKeyPrefix: apiKey?.substring(0, 10) + '...',
     textPreview: text.substring(0, 50),
     stability,
     similarityBoost,
