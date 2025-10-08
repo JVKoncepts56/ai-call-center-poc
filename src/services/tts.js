@@ -54,22 +54,22 @@ async function generateOpenAISpeech(text, voice) {
 async function generateElevenLabsSpeech(text, voiceId) {
   const stability = parseFloat(process.env.ELEVENLABS_STABILITY) || 0.5;
   const similarityBoost = parseFloat(process.env.ELEVENLABS_SIMILARITY_BOOST) || 0.75;
+  const modelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_monolingual_v1';
 
-  const audio = await elevenlabs.textToSpeech({
-    voiceId: voiceId,
-    text: text,
+  const voiceSettings = {
     stability: stability,
-    similarityBoost: similarityBoost,
-    modelId: process.env.ELEVENLABS_MODEL_ID || 'eleven_monolingual_v1'
+    similarity_boost: similarityBoost
+  };
+
+  // Generate audio using elevenlabs-node API
+  const audioBuffer = await elevenlabs.textToSpeech({
+    voiceId: voiceId,
+    textInput: text,
+    modelId: modelId,
+    voiceSettings: voiceSettings
   });
 
-  // Convert stream to buffer
-  const chunks = [];
-  for await (const chunk of audio) {
-    chunks.push(chunk);
-  }
-
-  return Buffer.concat(chunks);
+  return audioBuffer;
 }
 
 module.exports = {
