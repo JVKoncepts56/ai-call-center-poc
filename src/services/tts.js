@@ -1,0 +1,77 @@
+const OpenAI = require('openai');
+const ElevenLabs = require('elevenlabs-node');
+
+// Initialize clients
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+const elevenlabs = new ElevenLabs({
+  apiKey: process.env.ELEVENLABS_API_KEY
+});
+
+/**
+ * Generate speech from text using configured TTS provider
+ * @param {string} text - Text to convert to speech
+ * @param {string} voice - Voice ID or name
+ * @returns {Promise<Buffer>} Audio buffer (MP3 format)
+ */
+async function textToSpeech(text, voice) {
+  const provider = process.env.TTS_PROVIDER || 'openai'; // Default to OpenAI
+
+  try {
+    if (provider === 'elevenlabs') {
+      return await generateElevenLabsSpeech(text, voice);
+    } else {
+      return await generateOpenAISpeech(text, voice);
+    }
+  } catch (error) {
+    console.error(`Error generating speech with ${provider}:`, error);
+    throw new Error(`Failed to generate speech with ${provider}`);
+  }
+}
+
+/**
+ * Generate speech using OpenAI TTS
+ */
+async function generateOpenAISpeech(text, voice) {
+  const speed = parseFloat(process.env.OPENAI_VOICE_SPEED) || 1.0;
+
+  const mp3 = await openai.audio.speech.create({
+    model: 'tts-1-hd',
+    voice: voice,
+    input: text,
+    speed: speed
+  });
+
+  const buffer = Buffer.from(await mp3.arrayBuffer());
+  return buffer;
+}
+
+/**
+ * Generate speech using ElevenLabs TTS
+ */
+async function generateElevenLabsSpeech(text, voiceId) {
+  const stability = parseFloat(process.env.ELEVENLABS_STABILITY) || 0.5;
+  const similarityBoost = parseFloat(process.env.ELEVENLABS_SIMILARITY_BOOST) || 0.75;
+
+  const audio = await elevenlabs.textToSpeech({
+    voiceId: voiceId,
+    text: text,
+    stability: stability,
+    similarityBoost: similarityBoost,
+    modelId: process.env.ELEVENLABS_MODEL_ID || 'eleven_monolingual_v1'
+  });
+
+  // Convert stream to buffer
+  const chunks = [];
+  for await (const chunk of audio) {
+    chunks.push(chunk);
+  }
+
+  return Buffer.concat(chunks);
+}
+
+module.exports = {
+  textToSpeech
+};

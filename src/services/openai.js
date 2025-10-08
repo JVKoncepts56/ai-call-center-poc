@@ -90,28 +90,15 @@ Example good responses:
 }
 
 /**
- * Generate speech from text using OpenAI TTS
+ * Generate speech from text using configured TTS provider
+ * Now uses the centralized TTS service (supports OpenAI and ElevenLabs)
  * @param {string} text - Text to convert to speech
+ * @param {string} voice - Voice ID or name
  * @returns {Promise<Buffer>} Audio buffer
  */
 async function textToSpeech(text, voice) {
-  try {
-    // Get speed from environment variable, default to 1.0 (normal)
-    const speed = parseFloat(process.env.OPENAI_VOICE_SPEED) || 1.0;
-
-    const mp3 = await openai.audio.speech.create({
-      model: 'tts-1-hd', // HD quality for better, more natural sound
-      voice: voice,
-      input: text,
-      speed: speed // Range: 0.25 to 4.0 (1.0 = normal, 1.1 = 10% faster, 0.9 = 10% slower)
-    });
-
-    const buffer = Buffer.from(await mp3.arrayBuffer());
-    return buffer;
-  } catch (error) {
-    console.error('Error generating speech:', error);
-    throw new Error('Failed to generate speech');
-  }
+  const { textToSpeech: ttsGenerate } = require('./tts');
+  return await ttsGenerate(text, voice);
 }
 
 /**
