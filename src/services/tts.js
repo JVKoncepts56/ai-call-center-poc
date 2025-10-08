@@ -1,12 +1,16 @@
 const OpenAI = require('openai');
 const ElevenLabs = require('elevenlabs-node');
+const fs = require('fs');
+const path = require('path');
+const { Readable } = require('stream');
 
 // Initialize clients
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-const elevenlabs = new ElevenLabs({
+// Initialize ElevenLabs with API key
+const voice = new ElevenLabs({
   apiKey: process.env.ELEVENLABS_API_KEY
 });
 
@@ -56,20 +60,34 @@ async function generateElevenLabsSpeech(text, voiceId) {
   const similarityBoost = parseFloat(process.env.ELEVENLABS_SIMILARITY_BOOST) || 0.75;
   const modelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_monolingual_v1';
 
-  const voiceSettings = {
-    stability: stability,
-    similarity_boost: similarityBoost
-  };
+  // Create a temporary file path (required by elevenlabs-node)
+  const tempFileName = `/tmp/elevenlabs-${Date.now()}.mp3`;
 
-  // Generate audio using elevenlabs-node API
-  const audioBuffer = await elevenlabs.textToSpeech({
-    voiceId: voiceId,
-    textInput: text,
-    modelId: modelId,
-    voiceSettings: voiceSettings
-  });
+  try {
+    // Generate audio using elevenlabs-node API
+    await voice.textToSpeech({
+      fileName: tempFileName,
+      textInput: text,
+      voiceId: voiceId,
+      stability: stability,
+      similarityBoost: similarityBoost,
+      modelId: modelId
+    });
 
-  return audioBuffer;
+    // Read the generated file into a buffer
+    const audioBuffer = fs.readFileSync(tempFileName);
+
+    // Clean up the temp file
+    fs.unlinkSync(tempFileName);
+
+    return audioBuffer;
+  } catch (error) {
+    // Clean up temp file on error
+    if (fs.existsSync(tempFileName)) {
+      fs.unlinkSync(tempFileName);
+    }
+    throw error;
+  }
 }
 
 module.exports = {
