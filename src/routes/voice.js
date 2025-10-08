@@ -60,7 +60,7 @@ router.post('/', async (req, res) => {
         hints: 'telemedicine, legal, Workforce Shield, medical, attorney, doctor'
       });
 
-      // First interaction - greet the caller with OpenAI voice
+      // First interaction - greet the caller with ElevenLabs voice
       const greetingText = 'Welcome to Workforce Shield, Virtual Care and Expert Counsel, Anytime, Any Day. Are you needing help with legal or medical issues?';
       const audioKey = await generateAndCacheAudio(greetingText, OPENAI_VOICE);
       const audioUrl = `${req.protocol}://${req.get('host')}/audio/${audioKey}`;
