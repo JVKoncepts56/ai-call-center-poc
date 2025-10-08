@@ -1,5 +1,5 @@
 const OpenAI = require('openai');
-const ElevenLabs = require('elevenlabs-node');
+const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const { Readable } = require('stream');
@@ -7,12 +7,6 @@ const { Readable } = require('stream');
 // Initialize clients
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
-});
-
-// Initialize ElevenLabs with API key and default voice
-const voice = new ElevenLabs({
-  apiKey: process.env.ELEVENLABS_API_KEY,
-  voiceId: process.env.ELEVENLABS_VOICE_ID
 });
 
 /**
@@ -63,22 +57,18 @@ async function generateOpenAISpeech(text, voice) {
 }
 
 /**
- * Generate speech using ElevenLabs TTS
+ * Generate speech using ElevenLabs TTS (Direct API call)
  */
 async function generateElevenLabsSpeech(text, voiceIdParam) {
   const stability = parseFloat(process.env.ELEVENLABS_STABILITY) || 0.5;
   const similarityBoost = parseFloat(process.env.ELEVENLABS_SIMILARITY_BOOST) || 0.75;
   const modelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_monolingual_v1';
 
-  // Use ELEVENLABS_VOICE_ID from env if voiceIdParam is actually OpenAI voice name
-  const voiceId = voiceIdParam && voiceIdParam.length > 20
-    ? voiceIdParam
-    : process.env.ELEVENLABS_VOICE_ID;
+  // Use ELEVENLABS_VOICE_ID from env
+  const voiceId = process.env.ELEVENLABS_VOICE_ID;
+  const apiKey = process.env.ELEVENLABS_API_KEY;
 
-  // Create a temporary file path (required by elevenlabs-node)
-  const tempFileName = `/tmp/elevenlabs-${Date.now()}.mp3`;
-
-  console.log('ElevenLabs TTS Request:', {
+  console.log('ElevenLabs TTS Request (Direct API):', {
     voiceId,
     textPreview: text.substring(0, 50),
     stability,
@@ -87,58 +77,43 @@ async function generateElevenLabsSpeech(text, voiceIdParam) {
   });
 
   try {
-    // Generate audio using elevenlabs-node API with exact parameter names
-    console.log('Calling ElevenLabs textToSpeech...');
-    const result = await voice.textToSpeech({
-      fileName: tempFileName,
-      textInput: text,
-      voiceId: voiceId,
-      stability: stability,
-      similarityBoost: similarityBoost,
-      modelId: modelId
-    }).then(res => {
-      console.log('ElevenLabs API success, result:', res);
-      return res;
-    }).catch(err => {
-      console.error('ElevenLabs API call failed - CAUGHT ERROR:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-        stack: err.stack
-      });
-      throw err;
-    });
+    // Call ElevenLabs API directly with axios
+    const response = await axios.post(
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+      {
+        text: text,
+        model_id: modelId,
+        voice_settings: {
+          stability: stability,
+          similarity_boost: similarityBoost
+        }
+      },
+      {
+        headers: {
+          'Accept': 'audio/mpeg',
+          'xi-api-key': apiKey,
+          'Content-Type': 'application/json'
+        },
+        responseType: 'arraybuffer'
+      }
+    );
 
-    console.log('ElevenLabs API result:', result);
-
-    // Check if file was created
-    if (!fs.existsSync(tempFileName)) {
-      throw new Error(`ElevenLabs did not create audio file at ${tempFileName}`);
-    }
-
-    // Read the generated file into a buffer
-    const audioBuffer = fs.readFileSync(tempFileName);
-
-    // Clean up the temp file
-    fs.unlinkSync(tempFileName);
+    const audioBuffer = Buffer.from(response.data);
 
     console.log('ElevenLabs TTS Success:', {
-      audioSize: audioBuffer.length
+      audioSize: audioBuffer.length,
+      status: response.status
     });
 
     return audioBuffer;
   } catch (error) {
     console.error('ElevenLabs TTS Error Details:', {
       message: error.message,
-      response: error.response?.data,
+      response: error.response?.data?.toString(),
       status: error.response?.status,
-      stack: error.stack
+      statusText: error.response?.statusText
     });
 
-    // Clean up temp file on error
-    if (fs.existsSync(tempFileName)) {
-      fs.unlinkSync(tempFileName);
-    }
     throw error;
   }
 }
