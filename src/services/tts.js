@@ -87,14 +87,24 @@ async function generateElevenLabsSpeech(text, voiceIdParam) {
 
   try {
     // Generate audio using elevenlabs-node API with exact parameter names
-    await voice.textToSpeech({
+    const result = await voice.textToSpeech({
       fileName: tempFileName,
       textInput: text,
       voiceId: voiceId,
       stability: stability,
       similarityBoost: similarityBoost,
       modelId: modelId
+    }).catch(err => {
+      console.error('ElevenLabs API call failed:', err);
+      throw err;
     });
+
+    console.log('ElevenLabs API result:', result);
+
+    // Check if file was created
+    if (!fs.existsSync(tempFileName)) {
+      throw new Error(`ElevenLabs did not create audio file at ${tempFileName}`);
+    }
 
     // Read the generated file into a buffer
     const audioBuffer = fs.readFileSync(tempFileName);
@@ -111,7 +121,8 @@ async function generateElevenLabsSpeech(text, voiceIdParam) {
     console.error('ElevenLabs TTS Error Details:', {
       message: error.message,
       response: error.response?.data,
-      status: error.response?.status
+      status: error.response?.status,
+      stack: error.stack
     });
 
     // Clean up temp file on error
