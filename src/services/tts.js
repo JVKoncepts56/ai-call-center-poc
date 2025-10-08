@@ -88,6 +88,7 @@ async function generateElevenLabsSpeech(text, voiceIdParam) {
 
   try {
     // Generate audio using elevenlabs-node API with exact parameter names
+    console.log('Calling ElevenLabs textToSpeech...');
     const result = await voice.textToSpeech({
       fileName: tempFileName,
       textInput: text,
@@ -95,8 +96,16 @@ async function generateElevenLabsSpeech(text, voiceIdParam) {
       stability: stability,
       similarityBoost: similarityBoost,
       modelId: modelId
+    }).then(res => {
+      console.log('ElevenLabs API success, result:', res);
+      return res;
     }).catch(err => {
-      console.error('ElevenLabs API call failed:', err);
+      console.error('ElevenLabs API call failed - CAUGHT ERROR:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        stack: err.stack
+      });
       throw err;
     });
 
