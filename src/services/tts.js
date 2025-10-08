@@ -64,16 +64,29 @@ async function generateOpenAISpeech(text, voice) {
 /**
  * Generate speech using ElevenLabs TTS
  */
-async function generateElevenLabsSpeech(text, voiceId) {
+async function generateElevenLabsSpeech(text, voiceIdParam) {
   const stability = parseFloat(process.env.ELEVENLABS_STABILITY) || 0.5;
   const similarityBoost = parseFloat(process.env.ELEVENLABS_SIMILARITY_BOOST) || 0.75;
   const modelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_monolingual_v1';
 
+  // Use ELEVENLABS_VOICE_ID from env if voiceIdParam is actually OpenAI voice name
+  const voiceId = voiceIdParam && voiceIdParam.length > 20
+    ? voiceIdParam
+    : process.env.ELEVENLABS_VOICE_ID;
+
   // Create a temporary file path (required by elevenlabs-node)
   const tempFileName = `/tmp/elevenlabs-${Date.now()}.mp3`;
 
+  console.log('ElevenLabs TTS Request:', {
+    voiceId,
+    textPreview: text.substring(0, 50),
+    stability,
+    similarityBoost,
+    modelId
+  });
+
   try {
-    // Generate audio using elevenlabs-node API
+    // Generate audio using elevenlabs-node API with exact parameter names
     await voice.textToSpeech({
       fileName: tempFileName,
       textInput: text,
@@ -89,8 +102,18 @@ async function generateElevenLabsSpeech(text, voiceId) {
     // Clean up the temp file
     fs.unlinkSync(tempFileName);
 
+    console.log('ElevenLabs TTS Success:', {
+      audioSize: audioBuffer.length
+    });
+
     return audioBuffer;
   } catch (error) {
+    console.error('ElevenLabs TTS Error Details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+
     // Clean up temp file on error
     if (fs.existsSync(tempFileName)) {
       fs.unlinkSync(tempFileName);
