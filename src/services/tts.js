@@ -31,6 +31,15 @@ async function textToSpeech(text, voice) {
     }
   } catch (error) {
     console.error(`Error generating speech with ${provider}:`, error);
+    console.error('Error details:', error.response?.data || error.message);
+
+    // Fallback to OpenAI if ElevenLabs fails
+    if (provider === 'elevenlabs') {
+      console.warn('ElevenLabs failed, falling back to OpenAI TTS');
+      const fallbackVoice = process.env.OPENAI_VOICE || 'alloy';
+      return await generateOpenAISpeech(text, fallbackVoice);
+    }
+
     throw new Error(`Failed to generate speech with ${provider}`);
   }
 }
