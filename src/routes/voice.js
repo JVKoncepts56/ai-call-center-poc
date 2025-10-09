@@ -63,8 +63,8 @@ router.post('/', async (req, res) => {
         hints: 'telemedicine, legal, Workforce Shield, medical, attorney, doctor'
       });
 
-      // First interaction - greet the caller with ElevenLabs voice
-      const greetingText = 'Welcome to Workforce Shield, Virtual Care and Expert Counsel, Anytime, Any Day. Are you needing help with legal or medical issues?';
+      // First interaction - greet the caller and introduce Dora
+      const greetingText = 'Hi! Welcome to Workforce Shield. My name is Dora. We offer Virtual Care and Expert Counsel, Anytime, Any Day. Are you needing help with legal or medical issues?';
       const audioKey = await generateAndCacheAudio(greetingText, VOICE);
       const audioUrl = `${req.protocol}://${req.get('host')}/audio/${audioKey}`;
 

@@ -98,9 +98,9 @@ app.listen(PORT, '0.0.0.0', async () => {
 
   // Preload greeting message
   const { generateAndCacheAudio } = require('./src/routes/audio');
-  const greetingText = 'Welcome to Workforce Shield, Virtual Care and Expert Counsel, Anytime, Any Day. Are you needing help with legal or medical issues?';
+  const greetingText = 'Hi! Welcome to Workforce Shield. My name is Dora. We offer Virtual Care and Expert Counsel, Anytime, Any Day. Are you needing help with legal or medical issues?';
   await generateAndCacheAudio(greetingText, voice);
-  console.log('✅ Greeting message pre-cached');
+  console.log('✅ Greeting message pre-cached (Dora introduction)');
 });
 
 module.exports = app;
