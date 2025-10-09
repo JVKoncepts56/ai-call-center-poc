@@ -135,8 +135,8 @@ A: Usually within 24 hours of your request.
 Q: What if I need a prescription?  
 A: If approved by our medical team, prescriptions are provided through Apple Pharmacy at discounted rates.
 
-Q: Is Workforce Shield for emergencies?  
-A: For life-threatening emergencies, always call 911. Workforce Shield is for non-emergent medical and legal situations.
+Q: Is Workforce Shield for emergencies?
+A: For life-threatening emergencies, always call nine one one. Workforce Shield is for non-emergent medical and legal situations.
 
 Q: Is multilingual support available?  
 A: Yes, in many regions. Please contact us for specific language options.
@@ -145,7 +145,7 @@ A: Yes, in many regions. Please contact us for specific language options.
 
 ### CHUNK 10: DISCLAIMERS
 - Workforce Shield does not replace emergency medical care or in-person legal representation.
-- For life-threatening medical situations, call 911 immediately.
+- For life-threatening medical situations, call nine one one immediately.
 - All services are out-of-pocket; insurance is not accepted.
 - Workforce Shield is not a medical clinic or law firm. It coordinates access to licensed physicians and attorneys.
 - Membership includes access to medical and legal professionals but not unlimited representation or prescriptions.
