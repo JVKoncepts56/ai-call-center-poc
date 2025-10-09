@@ -192,9 +192,29 @@ router.post('/', async (req, res) => {
       callSid: req.body.CallSid
     });
 
-    // Simple, minimal error response to avoid exceeding 64KB limit
     const twiml = new VoiceResponse();
-    twiml.say({ voice: 'alice' }, 'We apologize, but we are experiencing technical difficulties. Please try your call again.');
+
+    // Use OpenAI TTS for errors (faster and more reliable than ElevenLabs)
+    try {
+      const errorText = 'We apologize, but we are experiencing technical difficulties. Please try your call again.';
+      const { textToSpeech } = require('../services/tts');
+      const audioBuffer = await textToSpeech(errorText, OPENAI_VOICE);
+
+      // Generate cache key
+      const crypto = require('crypto');
+      const cacheKey = crypto.createHash('sha256').update(errorText + OPENAI_VOICE).digest('hex').substring(0, 32);
+
+      // Store in cache
+      const { cacheAudio } = require('./audio');
+      cacheAudio(cacheKey, audioBuffer);
+
+      const errorAudioUrl = `${req.protocol}://${req.get('host')}/audio/${cacheKey}`;
+      twiml.play(errorAudioUrl);
+    } catch (innerError) {
+      logger.error('Failed to generate error audio', { error: innerError.message });
+      // Fallback to Twilio voice only if OpenAI also fails
+      twiml.say({ voice: 'alice' }, 'System error. Please try again.');
+    }
     twiml.hangup();
 
     res.type('text/xml');
