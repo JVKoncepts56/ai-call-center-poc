@@ -154,7 +154,7 @@ router.post('/', async (req, res) => {
         twiml.play(responseAudioUrl);
 
         // Continue gathering input with better settings
-        const gather = twiml.gather({
+        twiml.gather({
           input: 'speech',
           action: '/webhook/voice',
           method: 'POST',
@@ -163,12 +163,6 @@ router.post('/', async (req, res) => {
           language: 'en-US',
           hints: 'telemedicine, legal, Workforce Shield, medical, attorney, doctor, yes, no'
         });
-
-        // If no input, ask if they need anything else
-        const followUpText = 'Is there anything else I can help you with?';
-        const followUpAudioKey = await generateAndCacheAudio(followUpText, OPENAI_VOICE);
-        const followUpAudioUrl = `${req.protocol}://${req.get('host')}/audio/${followUpAudioKey}`;
-        gather.play(followUpAudioUrl);
       }
     }
 

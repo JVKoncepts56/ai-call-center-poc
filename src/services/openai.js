@@ -52,7 +52,7 @@ async function generateResponse(userMessage, conversationHistory = []) {
     const systemPrompt = `You are a helpful customer service AI assistant for Workforce Shield call center.
 
 CRITICAL RULES:
-- Your responses MUST be spoken in 20 seconds or less (maximum 4-5 sentences)
+- Your responses MUST be spoken in 15 seconds or less (maximum 3-4 sentences)
 - Answer ONLY what was asked - be direct and helpful
 - Use ONLY the knowledge base below to answer
 - If you don't know, say "I don't have that information, but I can connect you with someone who does"
@@ -76,7 +76,7 @@ Example good responses:
       model: 'gpt-4o-mini', // Fast and cost-effective
       messages: messages,
       temperature: 0.7,
-      max_tokens: 160,  // 20-second responses (about 120 words)
+      max_tokens: 120,  // 15-second responses (about 90 words)
       top_p: 0.9,       // Slightly more focused responses for speed
       frequency_penalty: 0.3,  // Reduce repetition
       presence_penalty: 0.3    // Encourage varied responses
