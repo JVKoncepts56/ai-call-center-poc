@@ -10,8 +10,11 @@ const logger = require('../utils/logger');
 
 const VoiceResponse = twilio.twiml.VoiceResponse;
 
-// OpenAI voice from environment variable (required)
-const OPENAI_VOICE = process.env.OPENAI_VOICE;
+// Get voice based on TTS provider
+const TTS_PROVIDER = process.env.TTS_PROVIDER || 'openai';
+const VOICE = TTS_PROVIDER === 'elevenlabs'
+  ? process.env.ELEVENLABS_VOICE_ID
+  : process.env.OPENAI_VOICE;
 
 /**
  * POST /webhook/voice
@@ -62,7 +65,7 @@ router.post('/', async (req, res) => {
 
       // First interaction - greet the caller with ElevenLabs voice
       const greetingText = 'Welcome to Workforce Shield, Virtual Care and Expert Counsel, Anytime, Any Day. Are you needing help with legal or medical issues?';
-      const audioKey = await generateAndCacheAudio(greetingText, OPENAI_VOICE);
+      const audioKey = await generateAndCacheAudio(greetingText, VOICE);
       const audioUrl = `${req.protocol}://${req.get('host')}/audio/${audioKey}`;
 
       gather.play(audioUrl);
@@ -106,7 +109,7 @@ router.post('/', async (req, res) => {
         });
 
         // Play the bumper message
-        const bumperAudioKey = await generateAndCacheAudio(bumperMessage, OPENAI_VOICE);
+        const bumperAudioKey = await generateAndCacheAudio(bumperMessage, VOICE);
         const bumperAudioUrl = `${req.protocol}://${req.get('host')}/audio/${bumperAudioKey}`;
         twiml.play(bumperAudioUrl);
 
@@ -126,7 +129,7 @@ router.post('/', async (req, res) => {
         // Don't add follow-up text after bumper - let them respond directly
       } else {
         // Normal flow: Use pre-cached filler for INSTANT acknowledgment
-        const { cacheKey: fillerKey } = getRandomFillerAudio(OPENAI_VOICE);
+        const { cacheKey: fillerKey } = getRandomFillerAudio(VOICE);
         const fillerAudioUrl = `${req.protocol}://${req.get('host')}/audio/${fillerKey}`;
 
         // Play instant filler acknowledgment
@@ -149,7 +152,7 @@ router.post('/', async (req, res) => {
         });
 
         // Generate and play the actual response
-        const responseAudioKey = await generateAndCacheAudio(aiResponse, OPENAI_VOICE);
+        const responseAudioKey = await generateAndCacheAudio(aiResponse, VOICE);
         const responseAudioUrl = `${req.protocol}://${req.get('host')}/audio/${responseAudioKey}`;
         twiml.play(responseAudioUrl);
 
@@ -198,11 +201,11 @@ router.post('/', async (req, res) => {
     try {
       const errorText = 'We apologize, but we are experiencing technical difficulties. Please try your call again.';
       const { textToSpeech } = require('../services/tts');
-      const audioBuffer = await textToSpeech(errorText, OPENAI_VOICE);
+      const audioBuffer = await textToSpeech(errorText, VOICE);
 
       // Generate cache key
       const crypto = require('crypto');
-      const cacheKey = crypto.createHash('sha256').update(errorText + OPENAI_VOICE).digest('hex').substring(0, 32);
+      const cacheKey = crypto.createHash('sha256').update(errorText + VOICE).digest('hex').substring(0, 32);
 
       // Store in cache
       const { cacheAudio } = require('./audio');

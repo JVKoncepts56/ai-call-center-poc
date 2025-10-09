@@ -91,7 +91,9 @@ app.listen(PORT, '0.0.0.0', async () => {
 
   // Preload filler phrase audio for instant responses
   const { preloadFillerPhrases } = require('./src/utils/audioCache');
-  const voice = process.env.OPENAI_VOICE;
+  const voice = ttsProvider === 'elevenlabs'
+    ? process.env.ELEVENLABS_VOICE_ID
+    : process.env.OPENAI_VOICE;
   await preloadFillerPhrases(voice);
 
   // Preload greeting message
