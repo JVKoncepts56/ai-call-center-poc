@@ -189,26 +189,12 @@ router.post('/', async (req, res) => {
   } catch (error) {
     logger.error('Error in voice webhook', {
       error: error.message,
-      stack: error.stack,
-      openaiVoice: OPENAI_VOICE
+      callSid: req.body.CallSid
     });
 
+    // Simple, minimal error response to avoid exceeding 64KB limit
     const twiml = new VoiceResponse();
-
-    // Always use OpenAI voice for error messages
-    try {
-      const errorText = 'I apologize, but I encountered an error. Please try again later.';
-      const errorAudioKey = await generateAndCacheAudio(errorText, OPENAI_VOICE);
-      const errorAudioUrl = `${req.protocol}://${req.get('host')}/audio/${errorAudioKey}`;
-      twiml.play(errorAudioUrl);
-    } catch (innerError) {
-      logger.error('Failed to generate error audio with OpenAI', {
-        error: innerError.message,
-        voice: OPENAI_VOICE
-      });
-      // If OpenAI fails, just hang up
-      twiml.say('System error. Goodbye.');
-    }
+    twiml.say({ voice: 'alice' }, 'We apologize, but we are experiencing technical difficulties. Please try your call again.');
     twiml.hangup();
 
     res.type('text/xml');
